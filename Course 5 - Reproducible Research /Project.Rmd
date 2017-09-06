@@ -1,0 +1,170 @@
+---
+title: "The Impact of the Natural Disasters to Population Health and Economy in the United States"
+author: "Yangang Chen"
+output: 
+  html_document:
+    keep_md: true
+---
+
+Published on http://rpubs.com/yangangchen/NaturalDisasters
+
+**Synopsis**
+
+**This report studies the Impact of the Natural Disasters to Population Health and Economy in the United States. The tool of this report is data analysis using R and Rstudio. The results show that the natural disasters that causes the biggest threat to public health are tornado, excessive heat, heat, flood, flash flood, tstm wind, lightening, etc, while the natural disasters that causes the biggest threat to economy are flood, draught, hurricane/typhoon, tornado, storm surge, river flood, flash flood, etc.**
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+This reports involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+Here are the libraries needed for this report:
+```{r}
+library(knitr)
+library(data.table)
+library(ggplot2)
+library(gridExtra)
+```
+
+## Section 1: Data Processing
+
+First I download the data:
+```{r}
+#```{r,eval=FALSE}
+FileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+download.file(FileUrl,destfile = "StormData.csv.bz2")
+```
+Then I read the data using "fread". "fread" is a fast data reader and the resulting data type is "data.table".
+```{r}
+data <- fread(sprintf("bzcat %s | tr -d '\\000'", "StormData.csv.bz2"),verbose=TRUE)
+```
+Let us have a look of the data:
+```{r}
+head(data)
+```
+
+Our objective is to evaluate the impact of major storms and weather events to the public health and economy. Hence, only the following variables in the data are relevant to our study:
+* "EVTYPE": event (natural disaster) type
+* "FATALITIES": Fatalities
+* "INJURIES": Injuries
+* "PROPDMG": Property damage
+* "PROPDMGEXP": The unit of the property damage. "H" is "hundred", "K" is thousand, "M" is million, "B" is billion, and number is "10^{number}".
+* "CROPDMG": Crop damage
+* "CROPDMGEXP": The unit of the crop damage.
+
+To be concrete, let us see what is inside "PROPDMGEXP" and "CROPDMGEXP":
+```{r}
+summary(as.factor(data$PROPDMGEXP))
+summary(as.factor(data$CROPDMGEXP))
+```
+Hence, I subset the relevant variables as follows:
+```{r}
+data <- data[,c("EVTYPE","FATALITIES","INJURIES","PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP"),
+              with=FALSE]
+```
+Now let us look as the data again. The size of the data is smaller.
+```{r}
+head(data)
+summary(data)
+```
+
+Considering that the units of the data, given in "PROPDMGEXP" and "CROPDMGEXP", are not the same, I use the following "Transform"" function to transform the data to unit "1".
+```{r}
+Transform <- function(var,varExp) {
+    index <- varExp=="H"|varExp=="h"
+    var[index] <- var[index]*10^2
+    index <- varExp=="K"|varExp=="k"
+    var[index] <- var[index]*10^3
+    index <- varExp=="M"|varExp=="m"
+    var[index] <- var[index]*10^6
+    index <- varExp=="B"|varExp=="b"
+    var[index] <- var[index]*10^9
+    index <- !is.na(as.numeric(varExp))
+    var[index] <- var[index]*10^as.numeric(varExp[index])
+    return(var)
+}
+
+data$PROPDMG <- Transform(data$PROPDMG,data$PROPDMGEXP)
+data$CROPDMG <- Transform(data$CROPDMG,data$CROPDMGEXP)
+```
+Now that the units of "PROPDMG" and "PROPDMG" are the same, I delete "PROPDMGEXP" and "CROPDMGEXP"
+```{r}
+data <- data[,c("PROPDMGEXP","CROPDMGEXP"):=NULL]
+```
+Let us look as the data again. The units of the variables "PROPDMG" and "CROPDMG" are converted to 1.
+```{r}
+head(data)
+summary(data)
+```
+
+## Section 2: Results
+
+Next, I use the built-in function "aggregate" to group the data based on the event type, and then for each event type, I compute the sum of the fatalities, injuries, property damages and crop damages.
+```{r}
+aggdata <- aggregate(data[,-c("EVTYPE"),with=FALSE],
+                     by=list(EVTYPE=data$EVTYPE), FUN=sum, na.rm=TRUE)
+```
+
+Now "aggdata" summarizes the total fatalities, injuries, property damages and crop damages for each natural disaster.
+```{r}
+head(aggdata)
+tail(aggdata)
+```
+
+### Section 2.1: Impact of the natural disasters to public health
+
+I sort "aggdata" by the total fatalities in descending order, and check the top 10 natural disasters that cause the biggest fatalities:
+```{r}
+aggdataS1 <- aggdata[order(-aggdata$FATALITIES),]
+aggdataS1[1:10,]
+```
+
+I sort "aggdata" by the total injuries in descending order, and check the top 10 natural disasters that cause the biggest injuries:
+```{r}
+aggdataS2 <- aggdata[order(-aggdata$INJURIES),]
+aggdataS2[1:10,]
+```
+This table shows that tornado, excessive heat and flash flood are the top 3 killers.
+
+I visualize the top 10 killers as follows:
+```{r}
+aggdataS1 <- aggdata[order(-aggdata$FATALITIES,-aggdata$INJURIES),]
+aggdataS1$EVTYPE <- factor(aggdataS1$EVTYPE, levels=unique(aggdataS1$EVTYPE))
+ggplot(aggdataS1[1:10,], aes(x=EVTYPE)) + 
+    geom_line(aes(y=FATALITIES, group = 1, colour = "Fatalities"), size=1.5) + 
+    geom_line(aes(y=INJURIES, group = 1, colour = "Injuries"),size=1.5) +
+    theme(axis.text.x = element_text(angle=80, hjust=1)) +
+    xlab("Event type") + ylab("Count") + ggtitle("Impact of the natural disasters to public health, top 10")
+```
+
+To summarize, **the natural disasters that causes the biggest threat to public health are tornado, excessive heat, heat, flood, flash flood, tstm wind, lightening, etc.**
+
+### Section 2.2: Impact of the natural disasters to economy
+
+I sort "aggdata" by the total property damages in descending order, and check the top 10 natural disasters that cause the biggest property damages:
+```{r}
+aggdataS3 <- aggdata[order(-aggdata$PROPDMG),]
+aggdataS3[1:10,]
+```
+
+I sort "aggdata" by the total crop damages in descending order, and check the top 10 natural disasters that cause the biggest crop damages:
+```{r}
+aggdataS4 <- aggdata[order(-aggdata$CROPDMG),]
+aggdataS4[1:10,]
+```
+
+I visualize the top 10 economic destructors as follows:
+```{r}
+aggdataS3$EVTYPE <- factor(aggdataS3$EVTYPE, levels=unique(aggdataS3$EVTYPE))
+plot1 <- ggplot(aggdataS3[1:10,], aes(x=EVTYPE,y=PROPDMG)) + 
+    geom_point(colour="red") + theme(axis.text.x = element_text(angle=80, hjust=1)) +
+    xlab("Event type") + ylab("Property damage")
+aggdataS4$EVTYPE <- factor(aggdataS4$EVTYPE, levels=unique(aggdataS4$EVTYPE))
+plot2 <- ggplot(aggdataS4[1:10,], aes(x=EVTYPE,y=CROPDMG)) + 
+    geom_point(colour="blue") + theme(axis.text.x = element_text(angle=80, hjust=1)) +
+    xlab("Event type") + ylab("Crop damage")
+grid.arrange(plot1, plot2, ncol=2,
+             top="Impact of the natural disasters to economy, top 10")
+```
+
+To summarize, **the natural disasters that causes the biggest threat to economy are flood, draught, hurricane/typhoon, tornado, storm surge, river flood, flash flood, etc.**

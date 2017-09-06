@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>A Canadian Language Map</title>
+  <meta charset="utf-8">
+  <meta name="description" content="A Canadian Language Map">
+  <meta name="author" content="Yangang Chen">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>A Canadian Language Map</h1>
+    <h2>Population by knowledge of official languages</h2>
+    <p>Yangang Chen<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Overview of the App</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Motivation:</li>
+</ul>
+
+<p>Canada has two official languages: English and French. My Shiny app trys to answer the following questions: Where do Francophone Canadians live? How many Canadians are bilingual? Do people in big cities (e.g. Toronto, Vancouver) speak different languages? ......</p>
+
+<ul>
+<li>The objective:</li>
+</ul>
+
+<p>Visualize and summarize the population of English/French/both/neither speakers in each city-level division</p>
+
+<ul>
+<li>The link:</li>
+</ul>
+
+<p><a href="https://yangangchen.shinyapps.io/CanadaLanguage/">https://yangangchen.shinyapps.io/CanadaLanguage/</a></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Basic Interface</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Part I: Interactive Map</li>
+</ul>
+
+<p>The size of the circles represents the population size for the English/French/both/neither speakers.</p>
+
+<p>The intensity of color of the circles represents the percentage of the chosen speakers among the total population.</p>
+
+<p>The pie chart shows the percentage of the English/French/both/neither speaker in a chosen province/territory.</p>
+
+<ul>
+<li>Part II: Data Explorer</li>
+</ul>
+
+<p>Search engine for the original data downloaded from Statistics Canada. Very straightforward!</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Example: Pie Chart in the Interactive Map</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">library(ggplot2)
+ggplot(data=subdata, aes(x=factor(1), y=Value, fill=Language) ) +
+    geom_bar(width=1, stat=&quot;identity&quot;) +
+    coord_polar(theta=&quot;y&quot;) + ylab(&quot;&quot;) + xlab(&quot;&quot;) + labs(fill=&quot;&quot;) + 
+    theme(axis.ticks = element_blank(), panel.grid  = element_blank(), 
+          axis.text = element_blank(), legend.position = &quot;right&quot;) + 
+    ggtitle(paste0(&quot;Statistics of &quot;,provinceBy))
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-2-1.png" alt="plot of chunk unnamed-chunk-2"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Conclusions</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>The biggest Canadian cities: Toronto, Montreal, Vancouver, Ottawa, Calgary, etc.</p></li>
+<li><p>Most of Canadians are anglophone (speak English).</p></li>
+<li><p>Most of Francophone Canadians live in the province of Quebec.</p></li>
+<li><p>Bilingual Canadians concentrate in Montreal, Ottawa, the border of Quebec/Ontario, and Northern New Brunswick.</p></li>
+<li><p>People in big cities (e.g. Toronto, Vancouver) may speak neither official languages.</p></li>
+<li><p>There are other interesting discoveries from the app, which will be left for you :)</p></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Overview of the App'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Basic Interface'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Example: Pie Chart in the Interactive Map'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Conclusions'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>

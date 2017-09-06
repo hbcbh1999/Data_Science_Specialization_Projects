@@ -1,0 +1,238 @@
+---
+title: "Getting and Cleaning Smartphones Data Set for Human Activity Recognition"
+author: "Yangang Chen"
+output: 
+  html_document:
+    keep_md: true
+---
+
+## Introduction
+
+One of the most exciting areas in all of data science right now is wearable computing - see for example this article:
+
+http://www.insideactivitytracking.com/data-science-activity-tracking-and-the-battle-for-the-worlds-top-sports-brand
+
+Companies like Fitbit, Nike, and Jawbone Up are racing to develop the most advanced algorithms to attract new users. The data linked to from the course website represent data collected from the accelerometers from the Samsung Galaxy S smartphone. A full description is available at the site where the data was obtained:
+
+http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
+
+Here are the data for human activity recognition:
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
+
+The purpose of this project is to collect, work with, and clean the data set. The goal is to prepare tidy data that can be used for later analysis.
+
+### 'run_analysis.R' (or 'run_analysis.Rmd') performs the following:
+
+* Download the data
+* Read the training data: X_train.txt, y_train.txt, subject_train.txt
+* Read the testing data: X_test.txt, y_test.txt, subject_test.txt
+* Merge the two data together
+* Rename the variable names in X_train.txt and X_test.txt, so that they are descriptive
+* Rename the activity labels in y_train.txt and y_test.txt, so that they are descriptive
+* Select the variables (columns) with means and standagrd derivation
+* Creates a second, independent tidy data set with the average of each variable for each activity and each subject
+* Write the new data set into a txt file
+
+### 'Data_Clean.txt' contains the following information:
+
+* An identifier of the subject who carried out the experiment.
+* A 66-feature vector with time and frequency domain variables. See codebook.md for more details. 
+* Its activity label (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING). 
+
+### Features (Variables) in 'Data_Clean.txt'
+
+* **tBodyAcc-XYZ:** \ time domain body acceleration signals in the X, Y and Z directions
+* **tGravityAcc-XYZ:** \ time domain gravity acceleration signals in the X, Y and Z directions
+* **tBodyAccJerk-XYZ:** \ time domain body acceleration Jerk signals in the X, Y and Z directions
+* **tBodyGyro-XYZ:** \ time domain body gyroscope signals in the X, Y and Z directions
+* **tBodyGyroJerk-XYZ:** \ time domain body gyroscope Jerk signals in the X, Y and Z directions
+* **tBodyAccMag:** \ time domain body acceleration magnitude
+* **tGravityAccMag:** \ time domain gravity acceleration magnitude
+* **tBodyAccJerkMag:** \ time domain body acceleration Jerk magnitude
+* **tBodyGyroMag:** \ time domain body gyroscope magnitude
+* **tBodyGyroJerkMag:** \ time domain body gyroscope Jerk magnitude
+* **fBodyAcc-XYZ:** \ freqency domain body acceleration signals in the X, Y and Z directions
+* **fBodyAccJerk-XYZ:** \ freqency domain body acceleration Jerk signals in the X, Y and Z directions
+* **fBodyGyro-XYZ:** \ freqency domain body gyroscope signals in the X, Y and Z directions
+* **fBodyAccMag:** \ freqency domain body acceleration magnitude
+* **fBodyAccJerkMag:** \ freqency domain body acceleration Jerk magnitude
+* **fBodyGyroMag:** \ freqency domain body gyroscope magnitude
+* **fBodyGyroJerkMag:** \ freqency domain body gyroscope Jerk magnitude
+* **mean():** \ Mean value
+* **std():** \ Standard deviation
+
+## Step 1: Downloading the data
+
+Here are the required libraries:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, verbose=FALSE)
+```
+```{r}
+library(knitr)
+library(data.table)
+```
+
+I download the data from the following url as "Dataset.zip", and unzip it to a folder called "UCI HAR Dataset".
+```{r}
+#```{r,eval=FALSE}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl, destfile = "./Dataset.zip")
+unzip("Dataset.zip")
+```
+
+Inside this unzipped folder, there are several files for general information, such as "./README.txt". After reading them, I decide that the data in "./train/Inertial Signals" and "./test/Inertial Signals" are not going to be used for this project. To save spaces, I delete these files and keep only necessary files. Two files are important. One is "features.txt", which  specifies the name of each variables in "./train/X\_train.txt" and "./test/X\_test.txt".
+```{r}
+X_variable_names <- fread("./UCI HAR Dataset/features.txt")$V2
+```
+The other is "activity_labels.txt". It specifies the meaning of "1", "2", "3", "4", "5" and "6" in "./train/y\_train.txt" and "./test/y\_test.txt", which are "WALKING", "WALKING\_UPSTAIRS", "WALKING\_DOWNSTAIRS", "SITTING", "STANDING" and "LAYING", respectively.
+```{r}
+y_activity_names <- fread("./UCI HAR Dataset/activity_labels.txt")
+y_activity_names
+```
+
+## Step 3: Processing the training set data
+
+### Step 2.1: Processing "X\_train.txt"
+
+There are three files to process. The first file is "X\_train.txt", which contains the feature data collected by smartphone devices. 
+```{r}
+X <- fread("./UCI HAR Dataset/train/X_train.txt")
+```
+I notice that the names of the variables in X are not descriptive.
+```{r}
+head(names(X))
+```
+I use the following command to **replace the variable names by their corresponding descriptive names**, which have been stored in "X\_variable\_names".
+```{r}
+setnames(X, old=names(X), new=X_variable_names)
+```
+As a result, the names of the variables in X are descriptive.
+```{r}
+head(names(X))
+```
+
+### Step 2.2: Processing "y\_train.txt"
+
+The second file to process is "y\_train.txt", which contains the data that describe the activity of the participants, namely, "WALKING", "WALKING\_UPSTAIRS", "WALKING\_DOWNSTAIRS", "SITTING", "STANDING" and "LAYING".
+```{r}
+y <- fread("./UCI HAR Dataset/train/y_train.txt")
+setnames(y, old=names(y), new="Activity")
+```
+y is a vector of numbers "1", "2", "3", "4", "5" and "6".
+```{r}
+summary(y)
+```
+**I convert them to their corresponding descriptive names, which are "WALKING", "WALKING\_UPSTAIRS", "WALKING\_DOWNSTAIRS", "SITTING", "STANDING" and "LAYING"**.
+```{r}
+y$Activity <- factor(as.factor(y$Activity),levels=y_activity_names$V1,labels=y_activity_names$V2)
+```
+Now y is a vector of the factors "WALKING", "WALKING\_UPSTAIRS", "WALKING\_DOWNSTAIRS", "SITTING", "STANDING" and "LAYING".
+```{r}
+summary(y)
+```
+
+### Step 2.3: Processing "subject\_train.txt"
+
+Now I read "subject\_train.txt", which contains the labels of the subjects (participants).
+```{r}
+sub <- fread("./UCI HAR Dataset/train/subject_train.txt")
+setnames(sub, old=names(sub), new="Subject")
+```
+
+### Step 2.4: Merge the data
+
+Now I merge the data that have been loaded from "X\_train.txt", "y\_train.txt" and "subject\_train.txt".
+```{r}
+data_train <- data.table(sub,X,y)
+#data_train <- data.table(sub,source='train',Feature=X,y)
+```
+
+### Integrating Step 2.1-2.4 into a generic function "FullProcess"
+
+Since the training and testing set data are processed in a similar fashion, I write a generic function "FullProcess" as follows:
+```{r}
+FullProcess <- function (X_file,y_file,subject_file) {
+    
+    # Step 2.1: Processing X_file
+    X <- fread(X_file)
+    setnames(X, old=names(X), new=X_variable_names)
+    
+    # Step 2.2: Processing y_file
+    y <- fread(y_file)
+    setnames(y, old=names(y), new="Activity")
+    y$Activity <- factor(as.factor(y$Activity),levels=y_activity_names$V1,labels=y_activity_names$V2)
+    
+    # Step 2.3: Processing subject_file
+    sub <- fread(subject_file)
+    setnames(sub, old=names(sub), new="Subject")
+    
+    # Step 2.4: Merge the data X, y and sub
+    data <- data.table(sub,X,y)
+    
+    return(data)
+}
+```
+
+Now the processing of the training set data can be simply written as follows:
+```{r}
+data_train <- FullProcess ("./UCI HAR Dataset/train/X_train.txt",
+                           "./UCI HAR Dataset/train/y_train.txt",
+                           "./UCI HAR Dataset/train/subject_train.txt")
+```
+
+## Step 3: Processing the testing set data
+
+In the similar vein, the testing set data is processed as follows:
+```{r}
+data_test <- FullProcess ("./UCI HAR Dataset/test/X_test.txt",
+                          "./UCI HAR Dataset/test/y_test.txt",
+                          "./UCI HAR Dataset/test/subject_test.txt")
+```
+
+## Step 4: Merging training and testing set data
+
+I use "rbind" to merge training set data and testing set data vertically.
+```{r}
+data <- rbind(data_train,data_test) # vertical
+```
+
+## Step 5: Select the variables (columns) with means and standagrd derivation
+
+I use "grepl" to select the variables (columns) with means and standagrd derivation, as follows:
+```{r}
+index <- names(data)=="Subject" | grepl("mean\\(\\)",names(data))|
+    grepl("std\\(\\)",names(data)) | names(data)=="Activity"
+data_select <- data[,index,with=FALSE]
+```
+
+## Step 6: Creates a second, independent tidy data set with the average of each variable for each activity and each subject
+
+Next I creates a second, independent tidy data set with the average of each variable for each activity and each subject. The function "aggregate" can implement this. More specifically,
+
+* It splits data_select into 180 groups distinguished by 30 subjects and 6 activities
+* It applies the function "mean" on each variables (columns) of each group
+* It aggregates the result together
+
+```{r}
+index <- names(data_select)!="Subject" & names(data_select)!="Activity"
+data_summary <- aggregate(data_select[,index,with=FALSE],
+                          list(data_select$Subject,data_select$Activity), mean)
+```
+
+I also rename some labels of the variables.
+```{r}
+setnames(data_summary,old=c("Group.1","Group.2"),new=c("Subject","Activity"))
+```
+
+Eventually, the data looks like the following:
+```{r}
+head(data_summary)
+#tail(data_summary)
+```
+
+## Step 7: Write the new data set into a txt file
+
+```{r}
+write.table(data_summary, "./Data_Clean.txt", sep="\t", row.name=FALSE)
+```
